@@ -1,4 +1,4 @@
-# Ruby Formatter Roundup & Benchmarks
+# The State of Ruby Formatters
 
 ## The Ruby Formatting Landscape
 
