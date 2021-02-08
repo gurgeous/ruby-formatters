@@ -102,9 +102,10 @@ end
 
 class String
   BLANK_RE = /\A[[:space:]]*\z/
-  ENCODED_BLANKS = Concurrent::Map.new do |h, enc|
-    h[enc] = Regexp.new(BLANK_RE.source.encode(enc), BLANK_RE.options | Regexp::FIXEDENCODING)
-  end
+  ENCODED_BLANKS =
+    Concurrent::Map.new do |h, enc|
+      h[enc] = Regexp.new(BLANK_RE.source.encode(enc), BLANK_RE.options | Regexp::FIXEDENCODING)
+    end
 
   # A string is blank if it's empty or contains whitespaces only:
   #
