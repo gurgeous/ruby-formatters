@@ -9,6 +9,8 @@ I compared the top four Ruby code formatting tools. Note that except for RuboCop
 - [Rubyfmt](https://github.com/penelopezone/rubyfmt) is written in Rust and blazingly fast, though under the hood it too relies on Ripper.
 - [Rufo](https://github.com/ruby-formatter/rufo) tries to be unobtrusive. Development seems to have slowed a bit.
 
+I used default options except for a few minor tweaks. I forced each tool to use double quotes (not single) and I also increased the line length for Prettier for Ruby. This resulted in diffs that were easier to compare.
+
 ## Comparison & Benchmarks
 
 I ran each tool against a set of test files. This repo contains branches so you can see the diff from each tool. Add `?w=1` to the diff to hide whitespace changes.
