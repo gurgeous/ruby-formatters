@@ -1,0 +1,161 @@
+#!/usr/bin/env ruby
+
+require "csv"
+require "fileutils"
+require "json"
+require "ostruct"
+require "uri"
+
+#
+# Prerequisites:
+#
+# gem install prettier rubocop rufo
+# https://github.com/penelopezone/rubyfmt/releases/tag/v0.5.0
+#
+# $ rbprettier --version => 2.2.1
+# $ rubocop --version => 1.9.1
+# $ rufo --version => rufo 0.12.0
+#
+
+#
+# inputs to test
+#
+
+INPUTS = [
+  OpenStruct.new(
+    name: "blank.rb",
+    url: "https://github.com/rails/rails/blob/main/activesupport/lib/active_support/core_ext/object/blank.rb"
+  ),
+  OpenStruct.new(
+    name: "form_helper.rb",
+    url: "https://github.com/rails/rails/blob/main/actionview/lib/action_view/helpers/form_helper.rb"
+  ),
+  OpenStruct.new(
+    name: "query_methods.rb",
+    url: "https://github.com/rails/rails/blob/main/activerecord/lib/active_record/relation/query_methods.rb"
+  ),
+  OpenStruct.new(
+    name: "redis.rb",
+    url: "https://github.com/redis/redis-rb/blob/master/lib/redis.rb"
+  )
+].freeze
+
+#
+# ruby formatters to test
+#
+
+FORMATTERS = [
+  OpenStruct.new(
+    name: "prettier",
+    cmd: "rbprettier --print-width 120 --ruby-single-quote false {}"
+  ),
+  OpenStruct.new(
+    name: "rubocop",
+    cmd: "cat {} | rubocop -a --stdin ignore.rb --stderr"
+  ),
+  OpenStruct.new(
+    name: "rubyfmt",
+    cmd: "rubyfmt {}"
+  ),
+  OpenStruct.new(
+    name: "rufo",
+    cmd: "cat {} | rufo"
+  )
+].freeze
+
+TMP = "/tmp/in.rb".freeze
+
+LOOPS = 50
+
+system("git checkout --quiet master", exception: true)
+
+#
+# fetch inputs
+#
+
+if ARGV.first == "--fetch"
+  # fetch inputs
+  INPUTS.each do |input|
+    puts "Fetching #{input.url}..."
+    path = URI.parse(input.url).path.gsub("/blob/", "/")
+    src = "https://raw.githubusercontent.com#{path}"
+    system("curl --silent #{src} --output tests/#{input.name}", exception: true)
+  end
+  exit
+end
+
+#
+# print cloc
+#
+# name,size,lines,cloc
+# blank.rb,2988,155,57
+# form_helper.rb,116619,2651,406
+# query_methods.rb,54266,1573,767
+# redis.rb,105529,3541,1552
+#
+
+if ARGV.first == "--cloc"
+  CSV($stdout) do |csv|
+    csv << %i[name size lines cloc]
+    INPUTS.each do |input|
+      cloc = JSON.parse(`cloc --json tests/#{input.name}`)
+      lines = cloc["header"]["n_lines"]
+      code = cloc["Ruby"]["code"]
+      csv << [input.name, File.stat("tests/#{input.name}").size, lines, code]
+    end
+  end
+  exit
+end
+
+#
+# run formatters, each in a branch for diffing
+#
+
+if ARGV.first == "--branches"
+  FORMATTERS.each do |fmt|
+    puts "--------- #{fmt.name}..."
+    system("git checkout master", exception: true)
+    system("git branch -D #{fmt.name}")
+    system("git checkout -b #{fmt.name}", exception: true)
+    INPUTS.map do |input|
+      system("git show master:tests/#{input.name} > #{TMP}", exception: true)
+      cmd = fmt.cmd.gsub("{}", TMP)
+      system("#{cmd} > tests/#{input.name} 2> /dev/null")
+    end
+    system("git rm ruby-formatters", exception: true)
+    system("git add tests && git commit -m branch", exception: true)
+  end
+  system("git checkout master", exception: true)
+  exit
+end
+
+#
+# run formatters and print benchmarks
+#
+# ,blank.rb,form_helper.rb,query_methods.rb,redis.rb
+# prettier,0.563,0.754,0.729,1.036
+# rubocop,1.054,2.863,2.14,3.578
+# rubyfmt,0.021,0.034,0.037,0.056
+# rufo,0.147,0.188,0.184,0.243
+#
+
+CSV($stdout) do |csv|
+  csv << [nil] + INPUTS.map(&:name)
+
+  FORMATTERS.each do |fmt|
+    row = [fmt.name]
+    row += INPUTS.map do |input|
+      tmp = "/tmp/in.rb"
+      system("git show master:tests/#{input.name} > #{tmp}", exception: true)
+      cmd = fmt.cmd.gsub("{}", tmp)
+
+      # now loop for timing
+      tm = Time.now
+      LOOPS.times { system("#{cmd} > /dev/null 2> /dev/null") }
+      ((Time.now - tm) / LOOPS).round(3)
+    end
+    csv << row
+  end
+end
+
+system("git checkout master > /dev/null 2>&1", exception: true)
