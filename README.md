@@ -22,6 +22,15 @@ I ran each tool against a set of test files. This repo contains branches so you 
 | Rubyfmt v0.5.0           | 745 stars | 25          | [see diff](https://github.com/gurgeous/ruby-formatters/compare/rubyfmt)  |
 | Rufo v0.12.0             | 678 stars | 19          | [see diff](https://github.com/gurgeous/ruby-formatters/compare/rufo)     |
 
+To compare the tools, look at the diffs between branches:
+
+|          | prettier                                                                      | rubocop                                                                       | rubyfmt                                                                       | rufo                                                                          |
+| -------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| prettier | -                                                                             | [diff](https://github.com/gurgeous/ruby-formatters/compare/prettier..rubocop) | [diff](https://github.com/gurgeous/ruby-formatters/compare/prettier..rubyfmt) | [diff](https://github.com/gurgeous/ruby-formatters/compare/prettier..rufo)    |
+| rubocop  | [diff](https://github.com/gurgeous/ruby-formatters/compare/rubocop..prettier) | -                                                                             | [diff](https://github.com/gurgeous/ruby-formatters/compare/rubocop..rubyfmt)  | [diff](https://github.com/gurgeous/ruby-formatters/compare/rubocop..rufo)     |
+| rubyfmt  | [diff](https://github.com/gurgeous/ruby-formatters/compare/rubyfmt..prettier) | [diff](https://github.com/gurgeous/ruby-formatters/compare/rubyfmt..rubocop)  | -                                                                             | [diff](https://github.com/gurgeous/ruby-formatters/compare/rubyfmt..prettier) |
+| rufo     | [diff](https://github.com/gurgeous/ruby-formatters/compare/rufo..prettier)    | [diff](https://github.com/gurgeous/ruby-formatters/compare/rufo..rubocop)     | [diff](https://github.com/gurgeous/ruby-formatters/compare/rufo..rubyfmt)     | -                                                                             |
+
 Here are the test files I used:
 
 |                                                                                                                                               | kb   | lines | [cloc](https://github.com/AlDanial/cloc/) |
